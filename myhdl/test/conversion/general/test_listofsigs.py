@@ -15,7 +15,7 @@ M= 2**N
 @block
 def test_intbv2list():
     """Conversion between intbv and list of boolean signals."""
-    
+
     a = Signal(intbv(0)[N:])
     b = [Signal(bool(0)) for i in range(len(a))]
     z = Signal(intbv(0)[N:])
@@ -41,7 +41,12 @@ def test_intbv2list():
 
     return extract, assemble, stimulus
 
-    
+# test
+
+def test_intbv2list():
+    assert conversion.verify(intbv2list()) == 0
+
+
 ### A number of cases with relaxed constraints, for various decorator types ###
 
 @block
@@ -185,7 +190,7 @@ def case4(z, a, inv):
 @block
 def test_processlist(case, inv):
     """Extract list from intbv, do some processing, reassemble."""
-    
+
     a = Signal(intbv(1)[N:])
     z = Signal(intbv(0)[N:])
 
@@ -202,6 +207,24 @@ def test_processlist(case, inv):
         raise StopSimulation
 
     return case_inst, stimulus
+
+
+# functional tests
+
+def test_processlist11():
+    assert conversion.verify(processlist(case1, inv1)) == 0
+
+def test_processlist12():
+    assert conversion.verify(processlist(case1, inv2))== 0
+
+def test_processlist22():
+    assert conversion.verify(processlist(case2, inv2))== 0
+
+def test_processlist33():
+    assert conversion.verify(processlist(case3, inv3))== 0
+
+def test_processlist44():
+    assert conversion.verify(processlist(case4, inv4))== 0
 
 
 # signed and unsigned
@@ -223,7 +246,11 @@ def test_unsigned():
         print(z)
 
     return logic, stimulus
-        
+
+
+def test_unsigned():
+    conversion.verify(unsigned())
+
 
 @pytest.mark.verify_convert
 @block
@@ -246,6 +273,9 @@ def test_signed():
 
 
 @pytest.mark.verify_convert
+def test_signed():
+    conversion.verify(signed())
+
 @block
 def test_mixed():
     z = Signal(intbv(0, min=0, max=34))
@@ -264,7 +294,11 @@ def test_mixed():
         print(z)
 
     return logic, stimulus
-        
+
+
+def test_mixed():
+    conversion.verify(mixed())
+
 
 ### error tests
 
@@ -290,6 +324,14 @@ def test_portInList():
     assert e.value.kind == _error.PortInList
        
     
+    try:
+        inst = conversion.analyze(portInList(z, a, b))
+    except ConversionError as e:
+        assert e.kind == _error.PortInList
+    else:
+        assert False
+
+
 # signal in multiple lists
 
 @block
@@ -313,7 +355,7 @@ def test_sigInMultipleLists():
     assert e.value.kind == _error.SignalInMultipleLists
 
 # list of signals as port
-       
+
 @block
 def my_register(clk, inp, outp):
     @always(clk.posedge)
@@ -330,3 +372,7 @@ def test_listAsPort():
     with pytest.raises(ConversionError) as e:
         inst = conversion.analyze(my_register(clk, inp, outp))
     assert e.value.kind == _error.ListAsPort
+    except ConversionError as e:
+        assert e.kind == _error.ListAsPort
+    else:
+        assert False

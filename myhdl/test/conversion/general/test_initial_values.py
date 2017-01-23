@@ -283,6 +283,10 @@ def initial_value_list_bench(initial_vals, **kwargs):
         input_signal_list, output_signal_list):
 
         output_drivers.append(assign_output(input_signal, output_signal))
+    @always_comb
+    def output_driver():
+        for i in range(signal_list_length):
+            output_signal_list[i].next = input_signal_list[i]
 
     @always(clk.posedge)
     def drive_and_check():
