@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import pytest
 import myhdl
 from myhdl import *
 from myhdl import ConversionError
@@ -10,10 +11,11 @@ M= 2**N
 
 ### A first case that already worked with 5.0 list of signal constraints ###
 
+@pytest.mark.verify_convert
 @block
-def intbv2list():
+def test_intbv2list():
     """Conversion between intbv and list of boolean signals."""
-    
+
     a = Signal(intbv(0)[N:])
     b = [Signal(bool(0)) for i in range(len(a))]
     z = Signal(intbv(0)[N:])
@@ -43,8 +45,8 @@ def intbv2list():
 
 def test_intbv2list():
     assert conversion.verify(intbv2list()) == 0
-            
-    
+
+
 ### A number of cases with relaxed constraints, for various decorator types ###
 
 @block
@@ -177,14 +179,18 @@ def case4(z, a, inv):
     return extract, inst, assemble
 
 
-
-
-
-
+@pytest.mark.parametrize('case, inv', [
+    (case1, inv1),
+    (case1, inv2),
+    (case2, inv2),
+    (case3, inv3),
+    (case4, inv4)
+])
+@pytest.mark.verify_convert
 @block
-def processlist(case, inv):
+def test_processlist(case, inv):
     """Extract list from intbv, do some processing, reassemble."""
-    
+
     a = Signal(intbv(1)[N:])
     z = Signal(intbv(0)[N:])
 
@@ -204,16 +210,16 @@ def processlist(case, inv):
 
 
 # functional tests
-    
+
 def test_processlist11():
     assert conversion.verify(processlist(case1, inv1)) == 0
-    
+
 def test_processlist12():
     assert conversion.verify(processlist(case1, inv2))== 0
-    
+
 def test_processlist22():
     assert conversion.verify(processlist(case2, inv2))== 0
-    
+
 def test_processlist33():
     assert conversion.verify(processlist(case3, inv3))== 0
 
@@ -221,10 +227,10 @@ def test_processlist44():
     assert conversion.verify(processlist(case4, inv4))== 0
 
 
-
 # signed and unsigned
+@pytest.mark.verify_convert
 @block
-def unsigned():
+def test_unsigned():
     z = Signal(intbv(0)[8:])
     a = [Signal(intbv(0)[8:]) for i in range(3)]
 
@@ -244,10 +250,11 @@ def unsigned():
 
 def test_unsigned():
     conversion.verify(unsigned())
-        
 
+
+@pytest.mark.verify_convert
 @block
-def signed():
+def test_signed():
     z = Signal(intbv(0, min=-10, max=34))
     a = [Signal(intbv(0, min=-5, max=17)) for i in range(3)]
 
@@ -265,12 +272,12 @@ def signed():
     return logic, stimulus
 
 
+@pytest.mark.verify_convert
 def test_signed():
     conversion.verify(signed())
-        
 
 @block
-def mixed():
+def test_mixed():
     z = Signal(intbv(0, min=0, max=34))
     a = [Signal(intbv(0, min=-11, max=17)) for i in range(3)]
     b = [Signal(intbv(0)[5:]) for i in range(3)]
@@ -291,7 +298,7 @@ def mixed():
 
 def test_mixed():
     conversion.verify(mixed())
-        
+
 
 ### error tests
 
@@ -312,14 +319,19 @@ def portInList(z, a, b):
 def test_portInList():
     z, a, b = [Signal(intbv(0)[8:]) for i in range(3)]
 
+    with pytest.raises(ConversionError) as e:
+        portInList(z, a, b).analyze_convert()
+    assert e.value.kind == _error.PortInList
+       
+    
     try:
         inst = conversion.analyze(portInList(z, a, b))
     except ConversionError as e:
         assert e.kind == _error.PortInList
     else:
         assert False
-       
-    
+
+
 # signal in multiple lists
 
 @block
@@ -338,15 +350,12 @@ def sigInMultipleLists():
 
 def test_sigInMultipleLists():
 
-    try:
-        inst = conversion.analyze(sigInMultipleLists())
-    except ConversionError as e:
-        assert e.kind == _error.SignalInMultipleLists
-    else:
-        assert False
+    with pytest.raises(ConversionError) as e:
+        sigInMultipleLists().analyze_convert()
+    assert e.value.kind == _error.SignalInMultipleLists
 
 # list of signals as port
-       
+
 @block
 def my_register(clk, inp, outp):
     @always(clk.posedge)
@@ -360,13 +369,10 @@ def test_listAsPort():
     clk = Signal(False)
     inp = [Signal(intbv(0)[8:0]) for index in range(count)]
     outp = [Signal(intbv(0)[8:0]) for index in range(count)]
-    try:
+    with pytest.raises(ConversionError) as e:
         inst = conversion.analyze(my_register(clk, inp, outp))
+    assert e.value.kind == _error.ListAsPort
     except ConversionError as e:
         assert e.kind == _error.ListAsPort
     else:
         assert False
-
-
-
-    

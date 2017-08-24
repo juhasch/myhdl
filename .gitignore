@@ -1,35 +1,57 @@
-# General
-*~
-*.swp
-*.out
-*.coverage
-build/
-.cache
-.style.yapf
-
-# Python
-*.py[cod]
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*egg-info/
-dist/
-.tox
+*.py[cod]
 
-# Cosim
-*.o
-*.vpi
+# C extensions
 *.so
 
-# Simulator generated files
-*.vcd
-modelsim.ini
-transcript
-*.log
-work/
-work_nvc/
-work_vlog/
-work_vcom/
-*.wlf
+# Distribution / packaging
+.Python
+env/
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Test artifacts
-myhdl/**/*.v
-myhdl/**/*.vhd
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+cover/
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+# Sphinx documentation
+docs/_build/
+docs/_static/
+
+.idea

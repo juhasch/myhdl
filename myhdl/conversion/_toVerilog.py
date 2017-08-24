@@ -368,7 +368,7 @@ def _writeSigDecls(f, intf, siglist, memlist):
         if m._driven:
             k = m._driven
 
-            if toVerilog.initial_values:
+            if toVerilog.initial_values and not k == 'wire':
                 if all([each._init == m.mem[0]._init for each in m.mem]):
 
                     initialize_block_name = ('INITIALIZE_' + m.name).upper()
@@ -1431,8 +1431,9 @@ class _ConvertAlwaysSeqVisitor(_ConvertVisitor):
             self.write("if (%s == %s) begin" % (reset, int(reset.active)))
             self.indent()
             for s in sigregs:
-                self.writeline()
-                self.write("%s <= %s;" % (s, _convertInitVal(s, s._init)))
+                if not isinstance(s, _TristateSignal) and not isinstance(s, _TristateDriver):
+                    self.writeline()
+                    self.write("%s <= %s;" % (s, _convertInitVal(s, s._init)))
             for v in varregs:
                 n, reg, init = v
                 self.writeline()
